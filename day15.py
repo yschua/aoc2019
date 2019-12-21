@@ -93,6 +93,9 @@ west = Point(-1, 0)
 east = Point(1, 0)
 directions = [north, south, west, east]
 
+def getInverseDirection(i):
+  return i + (-1 if i % 2 else 1)
+
 class Node:
   def __init__(self, location):
     self.neighbours = [None, None, None, None]
@@ -105,20 +108,13 @@ class Node:
   def generate(self):
     for i in range(4):
       self.neighbours[i] = Node(self.location + directions[i])
-      self.neighbours[i].neighbours[i + (-1 if i % 2 else 1)] = self
-
-def getReturnInput(i):
-  if i == 0: return 2 # south
-  if i == 1: return 1 # north
-  if i == 2: return 4 # east
-  if i == 3: return 3 # west
+      self.neighbours[i].neighbours[getInverseDirection(i)] = self
 
 visited = {}
 
 def build(node, returnInput):
   node.generate()
-  # print('Visiting {}'.format(node))
-  visited[node.location.getTuple()] = node.kind
+  visited[node.location.getTuple()] = node
   for i in range(4):
     neighbour = node.neighbours[i]
     if neighbour.location.getTuple() in visited: continue
@@ -126,25 +122,23 @@ def build(node, returnInput):
     status = computer.output[0]
     if status != 0:
       neighbour.kind = '.' if status == 1 else 'x'
-      build(neighbour, getReturnInput(i))
-      nodes.append(neighbour)
+      build(neighbour, getInverseDirection(i) + 1)
   computer.run(returnInput)
 
 program = [int(x) for x in sys.stdin.readline().split(',')]
 computer = IntcodeComputer(program)
 
 start = Node(Point(0, 0))
-start.kind = '.'
-nodes = [start]
-
+start.kind = 's'
 build(start, None)
 
+nodes = list(visited.values())
 n = len(nodes)
 # print(n)
 dist = [[math.inf for i in range(n)] for j in range(n)]
-goalIdx = None
 
 for i in range(n):
+  if nodes[i].kind == 's': startIdx = i
   if nodes[i].kind == 'x': goalIdx = i
   for j in range(n):
     if i == j:
@@ -160,5 +154,5 @@ for k in range(n):
       if dist[i][j] > dist[i][k] + dist[k][j]:
         dist[i][j] = dist[i][k] + dist[k][j]
 
-print(dist[0][goalIdx])
+print(dist[startIdx][goalIdx])
 print(max(dist[goalIdx]))
