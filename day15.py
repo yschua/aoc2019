@@ -98,31 +98,25 @@ def getInverseDirection(i):
 
 class Node:
   def __init__(self, location):
-    self.neighbours = [None, None, None, None]
     self.kind = '?' # unexplored
     self.location = location
 
   def __str__(self):
     return '{} {}'.format(self.kind, self.location)
 
-  def generate(self):
-    for i in range(4):
-      self.neighbours[i] = Node(self.location + directions[i])
-      self.neighbours[i].neighbours[getInverseDirection(i)] = self
-
 visited = {}
 
 def build(node, returnInput):
-  node.generate()
   visited[node.location.getTuple()] = node
   for i in range(4):
-    neighbour = node.neighbours[i]
-    if neighbour.location.getTuple() in visited: continue
+    location = node.location + directions[i]
+    if location.getTuple() in visited: continue
     computer.run(i + 1)
     status = computer.output[0]
     if status != 0:
-      neighbour.kind = '.' if status == 1 else 'x'
-      build(neighbour, getInverseDirection(i) + 1)
+      adjacent = Node(location)
+      adjacent.kind = '.' if status == 1 else 'x'
+      build(adjacent, getInverseDirection(i) + 1)
   computer.run(returnInput)
 
 program = [int(x) for x in sys.stdin.readline().split(',')]
